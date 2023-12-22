@@ -94,3 +94,29 @@ func SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Sign up successful"})
 
 }
+func Login(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	var user models.User
+	var foundUser models.User
+	if err := c.ShouldBind(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	err := UserCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+	defer cancel()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Email or password not correct"})
+		return
+	}
+	passwordIsValid, msg := VerifyPassword(*user.Password, *foundUser.Password)
+	defer cancel()
+	if !passwordIsValid {
+		c.JSON(http.StatusBadRequest, gin.H{"message": msg})
+		return
+	}
+	token, refreshToken, _ := generate.TokenGenerator(*foundUser.Email, *foundUser.First_Name, *foundUser.Last_Name, foundUser.User_ID)
+	defer cancel()
+	generate.UpdateAllTokens(token, refreshToken, foundUser.User_ID)
+	c.JSON(http.StatusFound, foundUser)
+}
