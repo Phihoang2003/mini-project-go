@@ -22,7 +22,7 @@ func main() {
 	routes.UserRoutes(router)
 	// router.Use(middleware.Authentication())
 	router.GET("/addtocart", app.AddToCart)
-	// router.GET("/removeitem", app.RemoveItem())
+	router.GET("/removeitem", app.RemoveItem)
 	// router.GET("/listcart", controllers.GetItemFromCart())
 	// router.POST("/addaddress", controllers.AddAddress())
 	// router.PUT("/edithomeaddress", controllers.EditHomeAddress())
